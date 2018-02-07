@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Чат</title>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+	<script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+	<script>
+		var socket = io();
+		function setUserName() {
+			socket.emit('setUserName', document.getElementById('name').value);
+		}
+
+		var user;
+
+		socket.on('userExists', function (data) {
+			document.getElementById('error').innerHTML = data;
+		});
+
+		socket.on('userSet', function (data) {
+				user = data.username;
+				document.body.innerHTML = '\
+				<div class="container"> \
+			 		<div class="row"> \
+			 			<div class="col-md-10"> \
+				 			<div class="form-group"> \
+				 			 	<input type="text" class="form-control" id="message" placeholder="Пиши здесь...">\
+				 			 	<button type="button" class="btn btn-primary" name= "button" onclick="sendMessage()">Отправить</button>\
+				 			 	<div id="message-container"></div>\
+				 			</div>\
+			 			</div>\
+			 		</div>\
+			 	</div>'
+			});
+
+		function sendMessage() {
+			var messageData = document.getElementById('message').value;
+			if (messageData) {
+				socket.emit('message', {user: user, message: messageData});
+			}
+
+			document.getElementById('message').value = '';
+		}
+
+		socket.on('newMessage', function (data) {
+			if (user) {
+				document.getElementById('message-container').innerHTML += '<div><b>' + data.user + '</b>: ' + data.message + '</div>';
+			}
+		})
+	</script>
+	<div class="container">
+		<div class="row">
+			<div class="col-md-10">
+				<div id="error"></div>
+				<div class="form-group">
+					<label for="name"> Давай общатся</label>
+					<input type="text" class="form-control" id="name" placeholder="Введи свое имя незнакомец">
+					<button type="submit" class="btn btn-primary" name="button" onclick="setUserName()">Вперёд!</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
